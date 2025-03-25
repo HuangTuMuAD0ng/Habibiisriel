@@ -2,39 +2,54 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-local username = player.Name
-local configFilePath = username .. "_order_config.json"
+-- Đường dẫn file tổng hợp config
+local configFilePath = "order_configs.json"
 
--- Hàm tải thông tin từ file config
-local function loadConfig()
+-- Hàm tải toàn bộ configs
+local function loadConfigs()
     if isfile(configFilePath) then
         local fileContent = readfile(configFilePath)
         local configData = HttpService:JSONDecode(fileContent)
         return configData
     end
-    return nil
+    return {}
 end
 
--- Hàm lưu thông tin vào file config
-local function saveConfig(order)
-    writefile(configFilePath, HttpService:JSONEncode({ order = order }))
-    print("Đã lưu đơn hàng:", order)
+-- Hàm lưu toàn bộ configs
+local function saveConfigs(configData)
+    writefile(configFilePath, HttpService:JSONEncode(configData))
 end
 
--- Tạo UI chính
+-- Hàm lấy config của người chơi
+local function getPlayerConfig(username)
+    local configs = loadConfigs()
+    return configs[username] or { order = "[Trống]" }
+end
+
+-- Hàm cập nhật config của người chơi
+local function setPlayerConfig(username, newConfig)
+    local configs = loadConfigs()
+    configs[username] = newConfig
+    saveConfigs(configs)
+end
+
+-- Tạo GUI
 local MainScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
+local ServerTimeLabel = Instance.new("TextLabel")
 local OrderLabel = Instance.new("TextLabel")
 local PlayerNameLabel = Instance.new("TextLabel")
-local ConfigButton = Instance.new("TextButton")
-local DeleteButton = Instance.new("TextButton")
+local ClearButton = Instance.new("TextButton")
+local SettingsButton = Instance.new("TextButton")
 local UICornerMain = Instance.new("UICorner")
 
+-- Thêm GUI chính vào PlayerGui
 MainScreenGui.Parent = player:WaitForChild("PlayerGui")
+MainScreenGui.Enabled = true
 
 -- Thiết lập MainFrame
-MainFrame.Size = UDim2.new(0, 680, 0, 150)
-MainFrame.Position = UDim2.new(0.5, -340, 0, 0)
+MainFrame.Size = UDim2.new(0, 400, 0, 80)
+MainFrame.Position = UDim2.new(0.5, -200, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.4
 MainFrame.BorderSizePixel = 0
@@ -43,111 +58,123 @@ MainFrame.Parent = MainScreenGui
 UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
+-- Hiển thị thời gian chạy script
+ServerTimeLabel.Text = "Thời gian chạy: 00:00"
+ServerTimeLabel.Size = UDim2.new(1, -10, 0.2, 0)
+ServerTimeLabel.Position = UDim2.new(0, 0, 0.1, 0)
+ServerTimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ServerTimeLabel.Font = Enum.Font.Roboto
+ServerTimeLabel.TextScaled = true
+ServerTimeLabel.BackgroundTransparency = 1
+ServerTimeLabel.Parent = MainFrame
+
+local injectStartTime = os.time()
+spawn(function()
+    while true do
+        local elapsedTime = os.time() - injectStartTime
+        local minutes = math.floor(elapsedTime / 60)
+        local seconds = elapsedTime % 60
+        ServerTimeLabel.Text = string.format("Thời gian chạy: %02d:%02d", minutes, seconds)
+        wait(1)
+    end
+end)
+
 -- Hiển thị đơn hàng
-OrderLabel.Text = "Đơn hàng: [Trống]"
-OrderLabel.Size = UDim2.new(1, -10, 0.4, 0)
-OrderLabel.Position = UDim2.new(0.5, 0, 0.2, 0)
-OrderLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-OrderLabel.TextColor3 = Color3.fromRGB(255, 223, 0)
-OrderLabel.Font = Enum.Font.GothamBold
+local username = player.Name
+local configData = getPlayerConfig(username)
+OrderLabel.Text = "Đơn hàng: " .. (configData.order or "[Trống]")
+OrderLabel.Size = UDim2.new(1, -10, 0.2, 0)
+OrderLabel.Position = UDim2.new(0, 0, 0.35, 0)
+OrderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+OrderLabel.Font = Enum.Font.Roboto
 OrderLabel.TextScaled = true
 OrderLabel.BackgroundTransparency = 1
 OrderLabel.Parent = MainFrame
 
--- Hiển thị tên người chơi (kích thước bằng 60% của Order Label)
-local visibleUsername = string.sub(username, 1, #username - 6) .. "******"
+-- Hiển thị tên người chơi (ẩn 4 ký tự cuối)
+local visibleUsername = string.sub(username, 1, #username - 4) .. "****"
 PlayerNameLabel.Text = "Tên người chơi: " .. visibleUsername
-PlayerNameLabel.Size = UDim2.new(1, -10, 0.24, 0) -- 60% của chiều cao Order Label (0.4 * 0.6 = 0.24)
-PlayerNameLabel.Position = UDim2.new(0.5, 0, 0.6, 0)
-PlayerNameLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+PlayerNameLabel.Size = UDim2.new(1, -10, 0.2, 0)
+PlayerNameLabel.Position = UDim2.new(0, 0, 0.6, 0)
 PlayerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlayerNameLabel.Font = Enum.Font.Gotham
+PlayerNameLabel.Font = Enum.Font.Roboto
 PlayerNameLabel.TextScaled = true
 PlayerNameLabel.BackgroundTransparency = 1
 PlayerNameLabel.Parent = MainFrame
 
--- Load config khi rejoin
-local configData = loadConfig()
-if configData and configData.order then
-    OrderLabel.Text = "Đơn hàng: " .. configData.order
-end
+-- Nút xóa đơn hàng
+ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
+ClearButton.Position = UDim2.new(0.85, 0, 0.6, 0)
+ClearButton.Text = "Xóa"
+ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ClearButton.Font = Enum.Font.GothamBold
+ClearButton.TextScaled = true
+ClearButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ClearButton.Parent = MainFrame
 
--- Nút Config (Thay đổi đơn hàng)
-ConfigButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Kích thước bằng 30% của Main UI
-ConfigButton.Position = UDim2.new(1, 0, 1, 0) -- Góc dưới bên phải của MainFrame
-ConfigButton.AnchorPoint = Vector2.new(1, 1)
-ConfigButton.Text = "⚙️"
-ConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ConfigButton.Font = Enum.Font.GothamBold
-ConfigButton.TextScaled = true
-ConfigButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ConfigButton.BackgroundTransparency = 0.4
-ConfigButton.Parent = MainFrame
-
-ConfigButton.MouseButton1Click:Connect(function()
-    local ConfigWindow = Instance.new("Frame")
-    local OrderInputBox = Instance.new("TextBox")
-    local DoneButton = Instance.new("TextButton")
-    local UICornerConfig = Instance.new("UICorner")
-
-    ConfigWindow.Size = UDim2.new(0, 350, 0, 150)
-    ConfigWindow.Position = UDim2.new(0.5, -175, 0.5, -75)
-    ConfigWindow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ConfigWindow.BackgroundTransparency = 0.5
-    ConfigWindow.BorderSizePixel = 0
-    ConfigWindow.Parent = MainScreenGui
-
-    UICornerConfig.CornerRadius = UDim.new(0, 10)
-    UICornerConfig.Parent = ConfigWindow
-
-    OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
-    OrderInputBox.Position = UDim2.new(0.5, 0, 0.4, 0)
-    OrderInputBox.AnchorPoint = Vector2.new(0.5, 0.5)
-    OrderInputBox.PlaceholderText = "Nhập đơn hàng mới..."
-    OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    OrderInputBox.Font = Enum.Font.Gotham
-    OrderInputBox.TextScaled = true
-    OrderInputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    OrderInputBox.Parent = ConfigWindow
-
-    DoneButton.Size = UDim2.new(0.3, 0, 0.3, 0)
-    DoneButton.Position = UDim2.new(0.5, 0, 0.85, 0)
-    DoneButton.AnchorPoint = Vector2.new(0.5, 0.5)
-    DoneButton.Text = "✅"
-    DoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    DoneButton.Font = Enum.Font.GothamBold
-    DoneButton.TextScaled = true
-    DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
-    DoneButton.Parent = ConfigWindow
-
-    DoneButton.MouseButton1Click:Connect(function()
-        local newOrder = OrderInputBox.Text
-        if newOrder ~= "" then
-            OrderLabel.Text = "Đơn hàng: " .. newOrder
-            saveConfig(newOrder)
-        end
-        ConfigWindow:Destroy()
-    end)
+ClearButton.MouseButton1Click:Connect(function()
+    setPlayerConfig(username, { order = "[Trống]" })
+    OrderLabel.Text = "Đơn hàng: [Trống]"
+    print("Đã xóa thông tin đơn hàng của tài khoản: " .. username)
 end)
 
--- Nút Delete (Xóa đơn hàng)
-DeleteButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Kích thước bằng 30% của Main UI
-DeleteButton.Position = UDim2.new(0, 0, 1, 0) -- Góc dưới bên trái của MainFrame
-DeleteButton.AnchorPoint = Vector2.new(0, 1)
-DeleteButton.Text = "🗑️"
-DeleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-DeleteButton.Font = Enum.Font.GothamBold
-DeleteButton.TextScaled = true
-DeleteButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-DeleteButton.BackgroundTransparency = 0.4
-DeleteButton.Parent = MainFrame
+-- Nút mở cửa sổ chỉnh sửa
+SettingsButton.Size = UDim2.new(0.1, 0, 0.4, 0)
+SettingsButton.Position = UDim2.new(0, 10, 0.6, 0)
+SettingsButton.Text = "⚙️"
+SettingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsButton.Font = Enum.Font.GothamBold
+SettingsButton.TextScaled = true
+SettingsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+SettingsButton.Parent = MainFrame
 
-DeleteButton.MouseButton1Click:Connect(function()
-    if isfile(configFilePath) then
-        delfile(configFilePath)
-        OrderLabel.Text = "Đơn hàng: [Trống]"
-        print("Đã xóa đơn hàng.")
-    else
-        print("Không tìm thấy đơn hàng để xóa.")
+-- Tạo cửa sổ chỉnh sửa config
+local ConfigWindow = Instance.new("Frame")
+local OrderInputBox = Instance.new("TextBox")
+local DoneButton = Instance.new("TextButton")
+local UICornerConfig = Instance.new("UICorner")
+
+ConfigWindow.Size = UDim2.new(0, 350, 0, 150)
+ConfigWindow.Position = UDim2.new(0.5, -175, 0.5, -75)
+ConfigWindow.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ConfigWindow.BackgroundTransparency = 0.5
+ConfigWindow.BorderSizePixel = 0
+ConfigWindow.Visible = false
+ConfigWindow.Parent = MainScreenGui
+
+UICornerConfig.CornerRadius = UDim.new(0, 10)
+UICornerConfig.Parent = ConfigWindow
+
+OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
+OrderInputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
+OrderInputBox.PlaceholderText = "Nhập chỉnh sửa đơn hàng..."
+OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+OrderInputBox.Font = Enum.Font.Roboto
+OrderInputBox.TextScaled = true
+OrderInputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+OrderInputBox.Parent = ConfigWindow
+
+DoneButton.Size = UDim2.new(0.3, 0, 0.3, 0)
+DoneButton.Position = UDim2.new(0.35, 0, 0.7, 0)
+DoneButton.Text = "Xong"
+DoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DoneButton.Font = Enum.Font.GothamBold
+DoneButton.TextScaled = true
+DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
+DoneButton.Parent = ConfigWindow
+
+-- Hiển thị cửa sổ chỉnh sửa khi nhấn nút cài đặt
+SettingsButton.MouseButton1Click:Connect(function()
+    ConfigWindow.Visible = true
+end)
+
+-- Lưu chỉnh sửa và tắt cửa sổ
+DoneButton.MouseButton1Click:Connect(function()
+    local newOrder = OrderInputBox.Text
+    if newOrder ~= "" then
+        OrderLabel.Text = "Đơn hàng: " .. newOrder
+        setPlayerConfig(username, { order = newOrder })
+        print("Đã lưu chỉnh sửa đơn hàng cho tài khoản: " .. username)
     end
+    ConfigWindow.Visible = false
 end)
