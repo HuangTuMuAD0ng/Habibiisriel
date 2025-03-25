@@ -33,8 +33,8 @@ local UICornerMain = Instance.new("UICorner")
 MainScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Thiết lập MainFrame
-MainFrame.Size = UDim2.new(0, 600, 0, 120) -- Tăng chiều ngang (600) và giảm chiều dọc (120)
-MainFrame.Position = UDim2.new(0.5, -300, 0, 0) -- Sát mép trên, căn giữa ngang
+MainFrame.Size = UDim2.new(0, 650, 0, 140) -- Tăng chiều ngang lên 650 và chiều dọc lên 140
+MainFrame.Position = UDim2.new(0.5, -325, 0, -5) -- Dịch sát mép trên hơn (-5 offset)
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.4
 MainFrame.BorderSizePixel = 0
