@@ -76,7 +76,7 @@ end
 ConfigButton.Size = UDim2.new(0.3, -10, 0.3, -10)
 ConfigButton.Position = UDim2.new(0.95, -10, 0.95, -10) -- Góc dưới bên phải
 ConfigButton.AnchorPoint = Vector2.new(1, 1)
-ConfigButton.Text = "⚙️ Thay đổi"
+ConfigButton.Text = "⚙️ Đổi"
 ConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ConfigButton.Font = Enum.Font.GothamBold
 ConfigButton.TextScaled = true
