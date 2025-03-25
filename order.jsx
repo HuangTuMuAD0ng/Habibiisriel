@@ -54,16 +54,15 @@ OrderLabel.TextScaled = true
 OrderLabel.BackgroundTransparency = 1
 OrderLabel.Parent = MainFrame
 
--- Hiển thị tên người chơi với kích cỡ chữ nhỏ hơn
+-- Hiển thị tên người chơi (kích thước bằng 60% của Order Label)
 local visibleUsername = string.sub(username, 1, #username - 6) .. "******"
 PlayerNameLabel.Text = "Tên người chơi: " .. visibleUsername
-PlayerNameLabel.Size = UDim2.new(1, -10, 0.2, 0) -- Giảm chiều cao thành 20% của khung
+PlayerNameLabel.Size = UDim2.new(1, -10, 0.24, 0) -- 60% của chiều cao Order Label (0.4 * 0.6 = 0.24)
 PlayerNameLabel.Position = UDim2.new(0.5, 0, 0.6, 0)
 PlayerNameLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 PlayerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 PlayerNameLabel.Font = Enum.Font.Gotham
-PlayerNameLabel.TextScaled = false -- Tắt tự động scale
-PlayerNameLabel.TextSize = 18 -- Kích cỡ chữ nhỏ hơn
+PlayerNameLabel.TextScaled = true
 PlayerNameLabel.BackgroundTransparency = 1
 PlayerNameLabel.Parent = MainFrame
 
@@ -74,8 +73,8 @@ if configData and configData.order then
 end
 
 -- Nút Config (Thay đổi đơn hàng)
-ConfigButton.Size = UDim2.new(0.15, -10, 0.1, -10)
-ConfigButton.Position = UDim2.new(0.98, 0, 0.98, 0)
+ConfigButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Kích thước bằng 30% của Main UI
+ConfigButton.Position = UDim2.new(1, 0, 1, 0) -- Góc dưới bên phải của MainFrame
 ConfigButton.AnchorPoint = Vector2.new(1, 1)
 ConfigButton.Text = "⚙️ Thay đổi"
 ConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -83,7 +82,7 @@ ConfigButton.Font = Enum.Font.GothamBold
 ConfigButton.TextScaled = true
 ConfigButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 ConfigButton.BackgroundTransparency = 0.4
-ConfigButton.Parent = MainScreenGui
+ConfigButton.Parent = MainFrame
 
 ConfigButton.MouseButton1Click:Connect(function()
     local ConfigWindow = Instance.new("Frame")
@@ -132,8 +131,8 @@ ConfigButton.MouseButton1Click:Connect(function()
 end)
 
 -- Nút Delete (Xóa đơn hàng)
-DeleteButton.Size = UDim2.new(0.15, -10, 0.1, -10)
-DeleteButton.Position = UDim2.new(0.02, 0, 0.98, 0)
+DeleteButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Kích thước bằng 30% của Main UI
+DeleteButton.Position = UDim2.new(0, 0, 1, 0) -- Góc dưới bên trái của MainFrame
 DeleteButton.AnchorPoint = Vector2.new(0, 1)
 DeleteButton.Text = "🗑️ Xóa"
 DeleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -141,7 +140,7 @@ DeleteButton.Font = Enum.Font.GothamBold
 DeleteButton.TextScaled = true
 DeleteButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 DeleteButton.BackgroundTransparency = 0.4
-DeleteButton.Parent = MainScreenGui
+DeleteButton.Parent = MainFrame
 
 DeleteButton.MouseButton1Click:Connect(function()
     if isfile(configFilePath) then
