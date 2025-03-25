@@ -26,12 +26,29 @@ local function saveConfigs(configData)
     writefile(configFilePath, HttpService:JSONEncode(configData))
 end
 
+-- Hàm kiểm tra và khởi tạo file config
+local function ensureConfigFileExists(username)
+    if not isfile(configFilePath) then
+        print("File config không tồn tại, tạo mới...")
+        local initialConfig = {}
+        initialConfig[username] = { order = "[Trống]" }
+        writefile(configFilePath, HttpService:JSONEncode(initialConfig))
+        createConfigWindow(username) -- Hiển thị cửa sổ nhập config
+    else
+        local status, _ = pcall(function()
+            readfile(configFilePath)
+        end)
+        if not status then
+            warn("Lỗi file config, cần nhập lại!")
+            createConfigWindow(username) -- Hiển thị cửa sổ nhập config
+        end
+    end
+end
+
 -- Hàm lấy config của người chơi
 local function getPlayerConfig(username)
+    ensureConfigFileExists(username) -- Đảm bảo file config tồn tại
     local configs = loadConfigs()
-    if not configs[username] then
-        createConfigWindow(username) -- Gọi cửa sổ nhập config nếu không tìm thấy
-    end
     return configs[username] or { order = "[Trống]" }
 end
 
@@ -47,7 +64,6 @@ local MainScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local ServerTimeLabel = Instance.new("TextLabel")
 local OrderLabel = Instance.new("TextLabel")
-local PlayerNameLabel = Instance.new("TextLabel")
 local UICornerMain = Instance.new("UICorner")
 
 -- Thêm GUI chính vào PlayerGui
@@ -86,6 +102,18 @@ spawn(function()
         wait(1)
     end
 end)
+
+-- Hiển thị thông tin đơn hàng
+local username = player.Name
+local configData = getPlayerConfig(username)
+OrderLabel.Text = "Đơn hàng: " .. (configData.order or "[Trống]")
+OrderLabel.Size = UDim2.new(1, -10, 0.2, 0)
+OrderLabel.Position = UDim2.new(0, 0, 0.35, 0)
+OrderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+OrderLabel.Font = Enum.Font.Roboto
+OrderLabel.TextScaled = true
+OrderLabel.BackgroundTransparency = 1
+OrderLabel.Parent = MainFrame
 -- Hàm tạo cửa sổ nhập config
 local function createConfigWindow(username)
     local ConfigWindow = Instance.new("Frame")
@@ -140,18 +168,6 @@ local function createConfigWindow(username)
     -- Ẩn UI chính khi hiển thị cửa sổ nhập config
     MainScreenGui.Enabled = false
 end
-
--- Hiển thị thông tin đơn hàng
-local username = player.Name
-local configData = getPlayerConfig(username)
-OrderLabel.Text = "Đơn hàng: " .. (configData.order or "[Trống]")
-OrderLabel.Size = UDim2.new(1, -10, 0.2, 0)
-OrderLabel.Position = UDim2.new(0, 0, 0.35, 0)
-OrderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-OrderLabel.Font = Enum.Font.Roboto
-OrderLabel.TextScaled = true
-OrderLabel.BackgroundTransparency = 1
-OrderLabel.Parent = MainFrame
 
 -- Nút xóa đơn hàng
 local ClearButton = Instance.new("TextButton")
