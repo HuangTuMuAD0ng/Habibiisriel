@@ -59,7 +59,7 @@ UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
 -- Hiển thị thời gian chạy script
-ServerTimeLabel.Text = "Thời gian chạy: 00:00"
+ServerTimeLabel.Text = "Thời gian: 00:00"
 ServerTimeLabel.Size = UDim2.new(1, -10, 0.2, 0)
 ServerTimeLabel.Position = UDim2.new(0, 0, 0.1, 0)
 ServerTimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -74,7 +74,7 @@ spawn(function()
         local elapsedTime = os.time() - injectStartTime
         local minutes = math.floor(elapsedTime / 60)
         local seconds = elapsedTime % 60
-        ServerTimeLabel.Text = string.format("Thời gian chạy: %02d:%02d", minutes, seconds)
+        ServerTimeLabel.Text = string.format("Thời gian: %02d:%02d", minutes, seconds)
         wait(1)
     end
 end)
@@ -105,7 +105,7 @@ PlayerNameLabel.Parent = MainFrame
 -- Nút xóa đơn hàng
 ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
 ClearButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-ClearButton.Text = "Xóa"
+ClearButton.Text = "🗑️"
 ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ClearButton.Font = Enum.Font.GothamBold
 ClearButton.TextScaled = true
@@ -147,7 +147,7 @@ UICornerConfig.Parent = ConfigWindow
 
 OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
 OrderInputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-OrderInputBox.PlaceholderText = "Nhập chỉnh sửa đơn hàng..."
+OrderInputBox.PlaceholderText = "Made By Koha?"
 OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 OrderInputBox.Font = Enum.Font.Roboto
 OrderInputBox.TextScaled = true
