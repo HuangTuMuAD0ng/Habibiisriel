@@ -33,8 +33,8 @@ local UICornerMain = Instance.new("UICorner")
 MainScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Thiết lập MainFrame
-MainFrame.Size = UDim2.new(0, 680, 0, 150) -- Cập nhật chiều ngang (680) và chiều cao (150)
-MainFrame.Position = UDim2.new(0.5, -340, 0, 0) -- Căn sát mép trên, căn giữa ngang
+MainFrame.Size = UDim2.new(0, 680, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -340, 0, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.4
 MainFrame.BorderSizePixel = 0
@@ -46,7 +46,7 @@ UICornerMain.Parent = MainFrame
 -- Hiển thị đơn hàng
 OrderLabel.Text = "Đơn hàng: [Trống]"
 OrderLabel.Size = UDim2.new(1, -10, 0.4, 0)
-OrderLabel.Position = UDim2.new(0.5, 0, 0.2, 0) -- Căn giữa dọc và ngang
+OrderLabel.Position = UDim2.new(0.5, 0, 0.2, 0)
 OrderLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 OrderLabel.TextColor3 = Color3.fromRGB(255, 223, 0)
 OrderLabel.Font = Enum.Font.GothamBold
@@ -54,15 +54,16 @@ OrderLabel.TextScaled = true
 OrderLabel.BackgroundTransparency = 1
 OrderLabel.Parent = MainFrame
 
--- Hiển thị tên người chơi (ẩn 6 ký tự cuối)
+-- Hiển thị tên người chơi với kích cỡ chữ nhỏ hơn
 local visibleUsername = string.sub(username, 1, #username - 6) .. "******"
 PlayerNameLabel.Text = "Tên người chơi: " .. visibleUsername
-PlayerNameLabel.Size = UDim2.new(1, -10, 0.3, 0)
-PlayerNameLabel.Position = UDim2.new(0.5, 0, 0.6, 0) -- Căn giữa dọc và ngang
+PlayerNameLabel.Size = UDim2.new(1, -10, 0.2, 0) -- Giảm chiều cao thành 20% của khung
+PlayerNameLabel.Position = UDim2.new(0.5, 0, 0.6, 0)
 PlayerNameLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 PlayerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 PlayerNameLabel.Font = Enum.Font.Gotham
-PlayerNameLabel.TextScaled = true
+PlayerNameLabel.TextScaled = false -- Tắt tự động scale
+PlayerNameLabel.TextSize = 18 -- Kích cỡ chữ nhỏ hơn
 PlayerNameLabel.BackgroundTransparency = 1
 PlayerNameLabel.Parent = MainFrame
 
@@ -74,7 +75,7 @@ end
 
 -- Nút Config (Thay đổi đơn hàng)
 ConfigButton.Size = UDim2.new(0.15, -10, 0.1, -10)
-ConfigButton.Position = UDim2.new(0.98, 0, 0.98, 0) -- Cố định ở góc dưới bên phải màn hình
+ConfigButton.Position = UDim2.new(0.98, 0, 0.98, 0)
 ConfigButton.AnchorPoint = Vector2.new(1, 1)
 ConfigButton.Text = "⚙️ Thay đổi"
 ConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -101,7 +102,7 @@ ConfigButton.MouseButton1Click:Connect(function()
     UICornerConfig.Parent = ConfigWindow
 
     OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
-    OrderInputBox.Position = UDim2.new(0.5, 0, 0.4, 0) -- Căn giữa
+    OrderInputBox.Position = UDim2.new(0.5, 0, 0.4, 0)
     OrderInputBox.AnchorPoint = Vector2.new(0.5, 0.5)
     OrderInputBox.PlaceholderText = "Nhập đơn hàng mới..."
     OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -132,7 +133,7 @@ end)
 
 -- Nút Delete (Xóa đơn hàng)
 DeleteButton.Size = UDim2.new(0.15, -10, 0.1, -10)
-DeleteButton.Position = UDim2.new(0.02, 0, 0.98, 0) -- Cố định ở góc dưới bên trái màn hình
+DeleteButton.Position = UDim2.new(0.02, 0, 0.98, 0)
 DeleteButton.AnchorPoint = Vector2.new(0, 1)
 DeleteButton.Text = "🗑️ Xóa"
 DeleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
