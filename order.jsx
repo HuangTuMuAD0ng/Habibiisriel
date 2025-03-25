@@ -98,7 +98,7 @@ end
 -- Nút xóa đơn hàng
 ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
 ClearButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-ClearButton.Text = "Xóa"
+ClearButton.Text = "🗑️"
 ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ClearButton.Font = Enum.Font.GothamBold
 ClearButton.TextScaled = true
@@ -153,7 +153,7 @@ OrderInputBox.Parent = ConfigWindow
 
 DoneButton.Size = UDim2.new(0.3, 0, 0.3, 0)
 DoneButton.Position = UDim2.new(0.35, 0, 0.7, 0)
-DoneButton.Text = "Xong"
+DoneButton.Text = "✅"
 DoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 DoneButton.Font = Enum.Font.GothamBold
 DoneButton.TextScaled = true
