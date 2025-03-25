@@ -76,7 +76,7 @@ end
 ConfigButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Kích thước bằng 30% của Main UI
 ConfigButton.Position = UDim2.new(1, 0, 1, 0) -- Góc dưới bên phải của MainFrame
 ConfigButton.AnchorPoint = Vector2.new(1, 1)
-ConfigButton.Text = "⚙️ Thay đổi"
+ConfigButton.Text = "⚙️"
 ConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ConfigButton.Font = Enum.Font.GothamBold
 ConfigButton.TextScaled = true
@@ -134,7 +134,7 @@ end)
 DeleteButton.Size = UDim2.new(0.3, 0, 0.3, 0) -- Kích thước bằng 30% của Main UI
 DeleteButton.Position = UDim2.new(0, 0, 1, 0) -- Góc dưới bên trái của MainFrame
 DeleteButton.AnchorPoint = Vector2.new(0, 1)
-DeleteButton.Text = "🗑️ Xóa"
+DeleteButton.Text = "🗑️"
 DeleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 DeleteButton.Font = Enum.Font.GothamBold
 DeleteButton.TextScaled = true
