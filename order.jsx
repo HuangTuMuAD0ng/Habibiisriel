@@ -33,8 +33,8 @@ local UICornerMain = Instance.new("UICorner")
 MainScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Thiết lập MainFrame
-MainFrame.Size = UDim2.new(0, 680, 0, 150) -- Tăng chiều ngang lên 680 và chiều dọc lên 150
-MainFrame.Position = UDim2.new(0.5, -340, 0, -5) -- Dịch sát mép trên hơn (-5 offset)
+MainFrame.Size = UDim2.new(0, 680, 0, 150) -- Cập nhật chiều ngang (680) và chiều cao (150)
+MainFrame.Position = UDim2.new(0.5, -340, 0, 0) -- Căn sát mép trên, căn giữa ngang
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.4
 MainFrame.BorderSizePixel = 0
@@ -73,8 +73,8 @@ if configData and configData.order then
 end
 
 -- Nút Config (Thay đổi đơn hàng)
-ConfigButton.Size = UDim2.new(0.3, -10, 0.3, -10)
-ConfigButton.Position = UDim2.new(1, -10, 1, -10) -- Góc dưới bên phải của MainFrame
+ConfigButton.Size = UDim2.new(0.15, -10, 0.1, -10)
+ConfigButton.Position = UDim2.new(0.98, 0, 0.98, 0) -- Cố định ở góc dưới bên phải màn hình
 ConfigButton.AnchorPoint = Vector2.new(1, 1)
 ConfigButton.Text = "⚙️ Thay đổi"
 ConfigButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -82,7 +82,7 @@ ConfigButton.Font = Enum.Font.GothamBold
 ConfigButton.TextScaled = true
 ConfigButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 ConfigButton.BackgroundTransparency = 0.4
-ConfigButton.Parent = MainFrame
+ConfigButton.Parent = MainScreenGui
 
 ConfigButton.MouseButton1Click:Connect(function()
     local ConfigWindow = Instance.new("Frame")
@@ -131,8 +131,8 @@ ConfigButton.MouseButton1Click:Connect(function()
 end)
 
 -- Nút Delete (Xóa đơn hàng)
-DeleteButton.Size = UDim2.new(0.3, -10, 0.3, -10)
-DeleteButton.Position = UDim2.new(0, 10, 1, -10) -- Góc dưới bên trái của MainFrame
+DeleteButton.Size = UDim2.new(0.15, -10, 0.1, -10)
+DeleteButton.Position = UDim2.new(0.02, 0, 0.98, 0) -- Cố định ở góc dưới bên trái màn hình
 DeleteButton.AnchorPoint = Vector2.new(0, 1)
 DeleteButton.Text = "🗑️ Xóa"
 DeleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -140,7 +140,7 @@ DeleteButton.Font = Enum.Font.GothamBold
 DeleteButton.TextScaled = true
 DeleteButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 DeleteButton.BackgroundTransparency = 0.4
-DeleteButton.Parent = MainFrame
+DeleteButton.Parent = MainScreenGui
 
 DeleteButton.MouseButton1Click:Connect(function()
     if isfile(configFilePath) then
