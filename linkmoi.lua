@@ -1,6 +1,7 @@
 print("Script Made By Koha")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
 -- Hàm tạo đường dẫn file config dựa trên tên người chơi
@@ -36,7 +37,7 @@ local function setPlayerConfig(username, newConfig)
     saveConfigs(username, newConfig)
 end
 
--- Tạo GUI
+-- Tạo GUI chính
 local MainScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local ServerTimeLabel = Instance.new("TextLabel")
@@ -54,12 +55,16 @@ MainScreenGui.Enabled = true
 MainFrame.Size = UDim2.new(0, 400, 0, 80)
 MainFrame.Position = UDim2.new(0.5, -200, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.BackgroundTransparency = 0.4
+MainFrame.BackgroundTransparency = 1 -- Bắt đầu từ trong suốt để thêm hiệu ứng fade in
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = MainScreenGui
 
 UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
+
+-- Hiệu ứng fade in cho MainFrame
+local fadeInTweenMain = TweenService:Create(MainFrame, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { BackgroundTransparency = 0.4 })
+fadeInTweenMain:Play()
 
 -- Hiển thị thời gian chạy script
 ServerTimeLabel.Text = "Thời gian: 00:00"
@@ -82,7 +87,7 @@ spawn(function()
     end
 end)
 
--- Hiển thị đơn hàng
+-- Hiển thị thông tin đơn hàng và tên người chơi
 local username = player.Name
 local configData = getPlayerConfig(username)
 OrderLabel.Text = "Đơn hàng: " .. (configData.order or "[Trống]")
@@ -94,7 +99,6 @@ OrderLabel.TextScaled = true
 OrderLabel.BackgroundTransparency = 1
 OrderLabel.Parent = MainFrame
 
--- Hiển thị tên người chơi (ẩn 4 ký tự cuối)
 local visibleUsername = string.sub(username, 1, #username - 4) .. "****"
 PlayerNameLabel.Text = "Tên người chơi: " .. visibleUsername
 PlayerNameLabel.Size = UDim2.new(1, -10, 0.2, 0)
@@ -104,7 +108,6 @@ PlayerNameLabel.Font = Enum.Font.Roboto
 PlayerNameLabel.TextScaled = true
 PlayerNameLabel.BackgroundTransparency = 1
 PlayerNameLabel.Parent = MainFrame
-
 -- Nút xóa đơn hàng
 ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
 ClearButton.Position = UDim2.new(0.85, 0, 0.6, 0)
@@ -140,7 +143,7 @@ local UICornerConfig = Instance.new("UICorner")
 ConfigWindow.Size = UDim2.new(0, 350, 0, 150)
 ConfigWindow.Position = UDim2.new(0.5, -175, 0.5, -75)
 ConfigWindow.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ConfigWindow.BackgroundTransparency = 0.5
+ConfigWindow.BackgroundTransparency = 1 -- Bắt đầu ở trạng thái trong suốt để thêm hiệu ứng fade in
 ConfigWindow.BorderSizePixel = 0
 ConfigWindow.Visible = false
 ConfigWindow.Parent = MainScreenGui
@@ -166,9 +169,25 @@ DoneButton.TextScaled = true
 DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
 DoneButton.Parent = ConfigWindow
 
+-- Hiệu ứng fade in cho ConfigWindow
+local function showConfigWindow()
+    ConfigWindow.Visible = true
+    local fadeInTweenConfig = TweenService:Create(ConfigWindow, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { BackgroundTransparency = 0.5 })
+    fadeInTweenConfig:Play()
+end
+
+-- Hiệu ứng fade out cho ConfigWindow
+local function hideConfigWindow()
+    local fadeOutTweenConfig = TweenService:Create(ConfigWindow, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { BackgroundTransparency = 1 })
+    fadeOutTweenConfig:Play()
+    fadeOutTweenConfig.Completed:Connect(function()
+        ConfigWindow.Visible = false
+    end)
+end
+
 -- Hiển thị cửa sổ chỉnh sửa khi nhấn nút cài đặt
 SettingsButton.MouseButton1Click:Connect(function()
-    ConfigWindow.Visible = true
+    showConfigWindow()
 end)
 
 -- Lưu chỉnh sửa và tắt cửa sổ
@@ -179,5 +198,5 @@ DoneButton.MouseButton1Click:Connect(function()
         setPlayerConfig(username, { order = newOrder })
         print("Đã lưu chỉnh sửa đơn hàng cho tài khoản: " .. username)
     end
-    ConfigWindow.Visible = false
+    hideConfigWindow()
 end)
