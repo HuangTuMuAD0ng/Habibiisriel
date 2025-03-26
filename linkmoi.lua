@@ -2,13 +2,16 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- Đường dẫn file tổng hợp config
-local configFilePath = "order_configs.json"
+-- Hàm tạo đường dẫn file config dựa trên tên người chơi
+local function getConfigFilePath(username)
+    return username .. "_order_configs.json"
+end
 
 -- Hàm tải toàn bộ configs
-local function loadConfigs()
-    if isfile(configFilePath) then
-        local fileContent = readfile(configFilePath)
+local function loadConfigs(username)
+    local filePath = getConfigFilePath(username)
+    if isfile(filePath) then
+        local fileContent = readfile(filePath)
         local configData = HttpService:JSONDecode(fileContent)
         return configData
     end
@@ -16,21 +19,20 @@ local function loadConfigs()
 end
 
 -- Hàm lưu toàn bộ configs
-local function saveConfigs(configData)
-    writefile(configFilePath, HttpService:JSONEncode(configData))
+local function saveConfigs(username, configData)
+    local filePath = getConfigFilePath(username)
+    writefile(filePath, HttpService:JSONEncode(configData))
 end
 
 -- Hàm lấy config của người chơi
 local function getPlayerConfig(username)
-    local configs = loadConfigs()
-    return configs[username] or { order = "[Trống]" }
+    local configs = loadConfigs(username)
+    return configs or { order = "[Trống]" }
 end
 
 -- Hàm cập nhật config của người chơi
 local function setPlayerConfig(username, newConfig)
-    local configs = loadConfigs()
-    configs[username] = newConfig
-    saveConfigs(configs)
+    saveConfigs(username, newConfig)
 end
 
 -- Tạo GUI
@@ -147,7 +149,7 @@ UICornerConfig.Parent = ConfigWindow
 
 OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
 OrderInputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-OrderInputBox.PlaceholderText = "Made By Koha?"
+OrderInputBox.PlaceholderText = "Nhập đơn hàng"
 OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 OrderInputBox.Font = Enum.Font.Roboto
 OrderInputBox.TextScaled = true
