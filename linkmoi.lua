@@ -9,13 +9,18 @@ local function getConfigFilePath(username)
     return username .. "_order_configs.json"
 end
 
--- Hàm tải toàn bộ configs
+-- Hàm tải toàn bộ configs (thêm xử lý lỗi)
 local function loadConfigs(username)
     local filePath = getConfigFilePath(username)
     if isfile(filePath) then
-        local fileContent = readfile(filePath)
-        local configData = HttpService:JSONDecode(fileContent)
-        return configData
+        local success, configData = pcall(function()
+            return HttpService:JSONDecode(readfile(filePath))
+        end)
+        if success then
+            return configData
+        else
+            warn("Lỗi giải mã JSON: ", configData)
+        end
     end
     return {}
 end
@@ -23,7 +28,12 @@ end
 -- Hàm lưu toàn bộ configs
 local function saveConfigs(username, configData)
     local filePath = getConfigFilePath(username)
-    writefile(filePath, HttpService:JSONEncode(configData))
+    local success, errorMessage = pcall(function()
+        writefile(filePath, HttpService:JSONEncode(configData))
+    end)
+    if not success then
+        warn("Lỗi khi lưu cấu hình: ", errorMessage)
+    end
 end
 
 -- Hàm lấy config của người chơi
@@ -37,6 +47,8 @@ local function setPlayerConfig(username, newConfig)
     saveConfigs(username, newConfig)
 end
 
+-- Đảm bảo PlayerGui đã sẵn sàng
+repeat wait() until player:FindFirstChild("PlayerGui")
 -- Tạo GUI chính
 local MainScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
@@ -51,18 +63,18 @@ local UICornerMain = Instance.new("UICorner")
 MainScreenGui.Parent = player:WaitForChild("PlayerGui")
 MainScreenGui.Enabled = true
 
--- Thiết lập MainFrame
+-- Thuộc tính MainFrame
 MainFrame.Size = UDim2.new(0, 400, 0, 80)
 MainFrame.Position = UDim2.new(0.5, -200, 0, 10)
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.BackgroundTransparency = 1 -- Bắt đầu từ trong suốt để thêm hiệu ứng fade in
+MainFrame.BackgroundTransparency = 1 -- Hiệu ứng fade in
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = MainScreenGui
 
 UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
--- Hiệu ứng fade in cho MainFrame
+-- Hiệu ứng fade in MainFrame
 local fadeInTweenMain = TweenService:Create(MainFrame, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { BackgroundTransparency = 0.4 })
 fadeInTweenMain:Play()
 
@@ -108,6 +120,7 @@ PlayerNameLabel.Font = Enum.Font.Roboto
 PlayerNameLabel.TextScaled = true
 PlayerNameLabel.BackgroundTransparency = 1
 PlayerNameLabel.Parent = MainFrame
+
 -- Nút xóa đơn hàng
 ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
 ClearButton.Position = UDim2.new(0.85, 0, 0.6, 0)
@@ -133,7 +146,6 @@ SettingsButton.Font = Enum.Font.GothamBold
 SettingsButton.TextScaled = true
 SettingsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 SettingsButton.Parent = MainFrame
-
 -- Tạo cửa sổ chỉnh sửa config
 local ConfigWindow = Instance.new("Frame")
 local OrderInputBox = Instance.new("TextBox")
@@ -143,7 +155,7 @@ local UICornerConfig = Instance.new("UICorner")
 ConfigWindow.Size = UDim2.new(0, 350, 0, 150)
 ConfigWindow.Position = UDim2.new(0.5, -175, 0.5, -75)
 ConfigWindow.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ConfigWindow.BackgroundTransparency = 1 -- Bắt đầu ở trạng thái trong suốt để thêm hiệu ứng fade in
+ConfigWindow.BackgroundTransparency = 1 -- Hiệu ứng fade in
 ConfigWindow.BorderSizePixel = 0
 ConfigWindow.Visible = false
 ConfigWindow.Parent = MainScreenGui
@@ -154,6 +166,7 @@ UICornerConfig.Parent = ConfigWindow
 OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
 OrderInputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
 OrderInputBox.PlaceholderText = "Nhập đơn hàng"
+OrderInputBox.Text = ""
 OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 OrderInputBox.Font = Enum.Font.Roboto
 OrderInputBox.TextScaled = true
@@ -197,6 +210,8 @@ DoneButton.MouseButton1Click:Connect(function()
         OrderLabel.Text = "Đơn hàng: " .. newOrder
         setPlayerConfig(username, { order = newOrder })
         print("Đã lưu chỉnh sửa đơn hàng cho tài khoản: " .. username)
+    else
+        warn("Không thể lưu đơn hàng vì giá trị trống!")
     end
     hideConfigWindow()
 end)
