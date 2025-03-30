@@ -1,15 +1,14 @@
 print("Script Made By Koha")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
--- Hàm tạo đường dẫn file config dựa trên tên người chơi
+-- Function to create the config file path based on the username
 local function getConfigFilePath(username)
     return username .. "_order_configs.json"
 end
 
--- Hàm tải toàn bộ configs (thêm xử lý lỗi)
+-- Function to load all configs (with error handling)
 local function loadConfigs(username)
     local filePath = getConfigFilePath(username)
     if isfile(filePath) then
@@ -19,38 +18,38 @@ local function loadConfigs(username)
         if success then
             return configData
         else
-            warn("Lỗi giải mã JSON: ", configData)
+            warn("JSON decoding error: ", configData)
         end
     end
     return {}
 end
 
--- Hàm lưu toàn bộ configs
+-- Function to save all configs
 local function saveConfigs(username, configData)
     local filePath = getConfigFilePath(username)
     local success, errorMessage = pcall(function()
         writefile(filePath, HttpService:JSONEncode(configData))
     end)
     if not success then
-        warn("Lỗi khi lưu cấu hình: ", errorMessage)
+        warn("Error saving config: ", errorMessage)
     end
 end
 
--- Hàm lấy config của người chơi
+-- Function to get the player's config
 local function getPlayerConfig(username)
     local configs = loadConfigs(username)
-    return configs or { order = "[Trống]" }
+    return configs or { order = "[Empty]" }
 end
 
--- Hàm cập nhật config của người chơi
+-- Function to update the player's config
 local function setPlayerConfig(username, newConfig)
     saveConfigs(username, newConfig)
 end
 
--- Đảm bảo PlayerGui đã sẵn sàng
+-- Ensure PlayerGui is ready
 repeat wait() until player:FindFirstChild("PlayerGui")
 
--- Tạo GUI chính
+-- Create main GUI
 local MainScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local OrderLabel = Instance.new("TextLabel")
@@ -59,13 +58,13 @@ local ClearButton = Instance.new("TextButton")
 local SettingsButton = Instance.new("TextButton")
 local UICornerMain = Instance.new("UICorner")
 
--- Thêm GUI chính vào PlayerGui
+-- Add the GUI to PlayerGui
 MainScreenGui.Parent = player:WaitForChild("PlayerGui")
 MainScreenGui.Enabled = true
 
--- Thuộc tính MainFrame
-MainFrame.Size = UDim2.new(0, 600, 0, 100) -- Chiều ngang rộng hơn, chiều dọc ngắn hơn
-MainFrame.Position = UDim2.new(0.5, -300, 0, 20) -- Căn giữa màn hình
+-- MainFrame properties (UI positioned at the top edge of the screen)
+MainFrame.Size = UDim2.new(0, 480, 0, 64) -- Size remains unchanged
+MainFrame.Position = UDim2.new(0.5, -240, 0, 0) -- Position shifted to top edge of screen
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.4
 MainFrame.BorderSizePixel = 0
@@ -74,33 +73,35 @@ MainFrame.Parent = MainScreenGui
 UICornerMain.CornerRadius = UDim.new(0, 10)
 UICornerMain.Parent = MainFrame
 
--- Hiển thị thông tin đơn hàng
+-- Display order information
 local username = player.Name
 local configData = getPlayerConfig(username)
 
-OrderLabel.Text = "Đơn hàng: " .. (configData.order or "[Trống]")
-OrderLabel.Size = UDim2.new(1, -10, 0.4, 0) -- Giảm kích thước nhẹ
-OrderLabel.Position = UDim2.new(0, 0, 0, 0) -- Đặt lên đầu
+OrderLabel.Text = "Order: " .. (configData.order or "[Empty]")
+OrderLabel.Size = UDim2.new(0.8, 0, 0.4, 0)
+OrderLabel.Position = UDim2.new(0.1, 0, 0.2, 0)
 OrderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-OrderLabel.Font = Enum.Font.GothamBold -- Font GothamBold
-OrderLabel.TextScaled = true
+OrderLabel.Font = Enum.Font.GothamBold
+OrderLabel.TextScaled = false
+OrderLabel.TextSize = 28
 OrderLabel.BackgroundTransparency = 1
 OrderLabel.Parent = MainFrame
 
--- Hiển thị tên người chơi
+-- Display the player's name
 local visibleUsername = string.sub(username, 1, #username - 4) .. "****"
-PlayerNameLabel.Text = "Tên người chơi: " .. visibleUsername
-PlayerNameLabel.Size = UDim2.new(0.7, 0, 0.2, 0) -- Kích thước nhỏ hơn nữa
-PlayerNameLabel.Position = UDim2.new(0.15, 0, 0.65, 0) -- Căn giữa hai nút
+PlayerNameLabel.Text = "Player Name: " .. visibleUsername
+PlayerNameLabel.Size = UDim2.new(0.8, 0, 0.4, 0)
+PlayerNameLabel.Position = UDim2.new(0.1, 0, 0.6, 0)
 PlayerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlayerNameLabel.Font = Enum.Font.Gotham -- Font Gotham
-PlayerNameLabel.TextScaled = true
+PlayerNameLabel.Font = Enum.Font.Gotham
+PlayerNameLabel.TextScaled = false
+PlayerNameLabel.TextSize = 20
 PlayerNameLabel.BackgroundTransparency = 1
 PlayerNameLabel.Parent = MainFrame
 
--- Đổi vị trí nút chỉnh sửa đơn hàng (góc cuối trái)
+-- Edit order button (left side)
 SettingsButton.Size = UDim2.new(0.15, 0, 0.4, 0)
-SettingsButton.Position = UDim2.new(0, 0, 1, -50) -- Đặt tại góc cuối trái
+SettingsButton.Position = UDim2.new(0, 0, 0.3, 0)
 SettingsButton.Text = "⚙️"
 SettingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SettingsButton.Font = Enum.Font.GothamBold
@@ -113,9 +114,9 @@ SettingsButton.MouseButton1Click:Connect(function()
     local OrderInputBox = Instance.new("TextBox")
     local DoneButton = Instance.new("TextButton")
 
-    ConfigWindow.Size = UDim2.new(0, 350, 0, 150)
-    ConfigWindow.Position = UDim2.new(0.5, -175, 0.5, -75)
-    ConfigWindow.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Đen mờ
+    ConfigWindow.Size = UDim2.new(0, 280, 0, 120)
+    ConfigWindow.Position = UDim2.new(0.5, -140, 0.5, -60)
+    ConfigWindow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     ConfigWindow.BackgroundTransparency = 0.5
     ConfigWindow.Parent = MainScreenGui
 
@@ -131,29 +132,29 @@ SettingsButton.MouseButton1Click:Connect(function()
 
     DoneButton.Size = UDim2.new(0.3, 0, 0.3, 0)
     DoneButton.Position = UDim2.new(0.35, 0, 0.7, 0)
-    DoneButton.Text = "Xong"
+    DoneButton.Text = "Done"
     DoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     DoneButton.Font = Enum.Font.GothamBold
     DoneButton.TextScaled = true
-    DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
+    DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
     DoneButton.Parent = ConfigWindow
 
     DoneButton.MouseButton1Click:Connect(function()
         local newOrder = OrderInputBox.Text
         if newOrder ~= "" then
-            OrderLabel.Text = "Đơn hàng: " .. newOrder
+            OrderLabel.Text = "Order: " .. newOrder
             setPlayerConfig(username, { order = newOrder })
             ConfigWindow:Destroy()
-            print("Đã lưu đơn hàng mới cho tài khoản: " .. username)
+            print("Saved new order for user: " .. username)
         else
-            warn("Không thể lưu đơn hàng vì giá trị trống!")
+            warn("Cannot save empty order!")
         end
     end)
 end)
 
--- Đổi vị trí nút xóa đơn hàng (góc cuối phải)
+-- Clear order button (right side)
 ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
-ClearButton.Position = UDim2.new(1, -90, 1, -50) -- Đặt tại góc cuối phải
+ClearButton.Position = UDim2.new(1, -72, 0.3, 0)
 ClearButton.Text = "🗑️"
 ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ClearButton.Font = Enum.Font.GothamBold
@@ -162,7 +163,7 @@ ClearButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 ClearButton.Parent = MainFrame
 
 ClearButton.MouseButton1Click:Connect(function()
-    setPlayerConfig(username, { order = "[Trống]" })
-    OrderLabel.Text = "Đơn hàng: [Trống]"
-    print("Đã xóa thông tin đơn hàng của tài khoản: " .. username)
+    setPlayerConfig(username, { order = "[Empty]" })
+    OrderLabel.Text = "Order: [Empty]"
+    print("Cleared order for user: " .. username)
 end)
