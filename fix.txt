@@ -1,7 +1,19 @@
 print("Script Made By Koha")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
+
+-- Ensure "Networking" exists in ReplicatedStorage
+local Networking = ReplicatedStorage:FindFirstChild("Networking")
+if not Networking then
+    warn("Networking object not found in ReplicatedStorage!")
+    -- You can create it or handle the error here if necessary
+    Networking = Instance.new("Folder")
+    Networking.Name = "Networking"
+    Networking.Parent = ReplicatedStorage
+    print("Temporary Networking object created.")
+end
 
 -- Function to create the config file path based on the username
 local function getConfigFilePath(username)
@@ -64,7 +76,7 @@ MainScreenGui.Enabled = true
 
 -- MainFrame properties (UI positioned at the top edge of the screen)
 MainFrame.Size = UDim2.new(0, 480, 0, 64) -- Size remains unchanged
-MainFrame.Position = UDim2.new(0.5, -240, 0, 0) -- Position shifted to top edge of screen
+MainFrame.Position = UDim2.new(0.5, -240, 0, 0) -- Position shifted to top edge of the screen
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.4
 MainFrame.BorderSizePixel = 0
