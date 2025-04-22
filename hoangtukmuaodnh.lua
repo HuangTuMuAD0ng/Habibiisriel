@@ -220,9 +220,13 @@ local function loadConfigs()
     
     local filePath = getConfigFilePath()
     
+    
     if not isfile(filePath) then
         print("Config file not found, creating new one")
+        writefile(filePath, HttpService:JSONEncode(defaultData))
         return defaultData
+    end
+
     end
     
     local success, data = pcall(function()
@@ -234,8 +238,11 @@ local function loadConfigs()
         return defaultData
     end
     
+    
     data.order = data.order or "[Empty]"
     data.history = data.history or {}
+    data.boostEnabled = data.boostEnabled or false
+
     
     print("Loaded config:", HttpService:JSONEncode(data))
     return data
@@ -252,8 +259,11 @@ local function saveConfigs(data)
         return false
     end
     
+    
     data.order = data.order or "[Empty]"
     data.history = data.history or {}
+    data.boostEnabled = data.boostEnabled or false
+
     
     local success, err = pcall(function()
         writefile(getConfigFilePath(), HttpService:JSONEncode(data))
@@ -392,6 +402,17 @@ OrderLabel.BackgroundTransparency = 1
 OrderLabel.TextXAlignment = Enum.TextXAlignment.Left
 OrderLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 OrderLabel.Parent = TextContainer
+
+
+-- Load boost flag from config
+configData.boostEnabled = configData.boostEnabled or false
+
+-- Tự bật boost nếu trạng thái trước đó là true
+if configData.boostEnabled then
+    playStartupSound()
+    enableBoost()
+end
+
 OrderLabel.ZIndex = TextContainer.ZIndex + 1
 
 --- PLAYER NAME ---
@@ -611,8 +632,7 @@ local function createConfigWindow()
         end
     end)
 
-    -- Boost FPS toggle
-local boostOn = false
+    
 local BoostButton = Instance.new("TextButton")
 BoostButton.Text = "BOOST FPS: OFF"
 BoostButton.Size = UDim2.new(0.6, 0, 0.15, 0)
@@ -629,106 +649,19 @@ local BoostCorner = Instance.new("UICorner")
 BoostCorner.CornerRadius = UDim.new(0, 6)
 BoostCorner.Parent = BoostButton
 
-local function playStartupSound()
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://7585147578"
-    sound.Volume = 0.7
-    sound.Parent = game:GetService("SoundService")
-    sound:Play()
-    sound.Ended:Connect(function()
-        sound:Destroy()
-    end)
-end
+_G.boostfps_button = _G.boostfps_button or false
 
-local function enableBoost()
-    playStartupSound()
-    local function isCharacter(model)
-        return model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart")
-    end
-    local function handleInstance(v)
-        if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Explosion")
-        or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Beam")
-        or v:IsA("Highlight") or v:IsA("SelectionBox")
-        or v:IsA("BillboardGui") or v:IsA("SurfaceGui")
-        or v:IsA("Decal") or v:IsA("Texture") then
-            v:Destroy()
-        elseif v:IsA("Sound") then
-            v.Volume = 0
-        elseif v:IsA("BasePart") and not isCharacter(v.Parent) then
-            v.Material = Enum.Material.SmoothPlastic
-            v.Transparency = 1
-            v.CanCollide = false
-        elseif v:IsA("Animator") then
-            for _, track in pairs(v:GetPlayingAnimationTracks()) do
-                track:Stop()
-            end
-        elseif v:IsA("Animation") or v:IsA("AnimationController") then
-            v:Destroy()
-        elseif v:IsA("Script") and v.Name == "Animate" then
-            v:Destroy()
-        end
-    end
-    local function cleanCharacter(char)
-        char:WaitForChild("HumanoidRootPart", 5)
-        task.wait(0.5)
-        local animate = char:FindFirstChild("Animate")
-        if animate then animate:Destroy() end
-        local humanoid = char:FindFirstChildWhichIsA("Humanoid")
-        if humanoid then
-            local animator = humanoid:FindFirstChildOfClass("Animator")
-            if animator then
-                for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop()
-                end
-            end
-        end
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("Animation") or v:IsA("AnimationController")
-            or v:IsA("Decal") or v:IsA("Texture") then
-                v:Destroy()
-            end
-        end
-    end
-    local function globalBoost()
-        for _, v in pairs(game:GetDescendants()) do
-            handleInstance(v)
-        end
-        for _, obj in pairs(workspace:GetChildren()) do
-            if (obj:IsA("Model") or obj:IsA("Folder")) and not isCharacter(obj) then
-                local n = obj.Name:lower()
-                if n:find("tree") or n:find("cloud") or n:find("building")
-                or n:find("island") or n:find("sea") or n:find("water")
-                or n:find("rock") or n:find("structure") or n:find("ship") then
-                    obj:Destroy()
-                end
-            end
-        end
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= game.Players.LocalPlayer and p.Character then
-                local a = p.Character:FindFirstChild("Animate")
-                if a then a:Destroy() end
-            end
-        end
-        pcall(function()
-            game:GetService("UserSettings").GameSettings.SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
-        end)
-        pcall(function()
-            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-        end)
-    end
-    game.DescendantAdded:Connect(handleInstance)
-    workspace.DescendantAdded:Connect(handleInstance)
-    game.Lighting.DescendantAdded:Connect(handleInstance)
-    local plr = game.Players.LocalPlayer
-    if plr.Character then cleanCharacter(plr.Character) end
-    plr.CharacterAdded:Connect(cleanCharacter)
-    globalBoost()
+local function updateButtonText()
+    BoostButton.Text = "BOOST FPS: " .. (_G.boostfps_button and "ON" or "OFF")
 end
+updateButtonText()
 
 BoostButton.MouseButton1Click:Connect(function()
-    boostOn = not boostOn
-    BoostButton.Text = "BOOST FPS: " .. (boostOn and "ON" or "OFF")
-    if boostOn then
+    _G.boostfps_button = not _G.boostfps_button
+    updateButtonText()
+    
+    if _G.boostfps_button then
+        playStartupSound()
         enableBoost()
         notify("Boost FPS", "Đã bật chế độ tiết kiệm hiệu năng!", 2)
     else
@@ -782,3 +715,9 @@ ManageButton.MouseButton1Click:Connect(showOrderManagement)
 
 -- Startup notification
 notify("System", "Order system loaded - Click ⋮ to manage", 3)
+
+if _G.boostfps_button then
+    playStartupSound()
+    enableBoost()
+    notify("Boost FPS", "Tự động bật Boost FPS theo cài đặt từ _G!", 2)
+end
