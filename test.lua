@@ -393,6 +393,42 @@ OrderLabel.TextXAlignment = Enum.TextXAlignment.Left
 OrderLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 OrderLabel.Parent = TextContainer
 
+
+-- Load boost flag from config
+configData.boostEnabled = configData.boostEnabled or false
+
+-- Tự bật boost nếu trạng thái trước đó là true
+
+-- BOOST FUNCTIONS
+
+local function playStartupSound()
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://9118823106" -- Bạn có thể thay đổi ID nếu muốn âm khác
+    sound.Volume = 1
+    sound.PlayOnRemove = true
+    sound.Parent = game:GetService("SoundService")
+    sound:Destroy() -- Sound sẽ tự play trước khi bị xóa nếu PlayOnRemove = true
+end
+
+local function enableBoost()
+    if boostfps then
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("https://yourdomain.com/boostfps.lua"))()
+        end)
+        if not success then
+            warn("Boost script failed to load:", err)
+        end
+    else
+        warn("boostfps is not enabled")
+    end
+end
+
+
+if configData.boostEnabled then
+    playStartupSound()
+    enableBoost()
+end
+
 OrderLabel.ZIndex = TextContainer.ZIndex + 1
 
 --- PLAYER NAME ---
