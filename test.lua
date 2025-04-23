@@ -393,16 +393,6 @@ OrderLabel.TextXAlignment = Enum.TextXAlignment.Left
 OrderLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 OrderLabel.Parent = TextContainer
 
-
--- Load boost flag from config
-configData.boostEnabled = configData.boostEnabled or false
-
--- Tự bật boost nếu trạng thái trước đó là true
-if configData.boostEnabled then
-    playStartupSound()
-    enableBoost()
-end
-
 OrderLabel.ZIndex = TextContainer.ZIndex + 1
 
 --- PLAYER NAME ---
