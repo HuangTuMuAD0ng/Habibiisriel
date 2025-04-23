@@ -1,8 +1,6 @@
 local plr = game.Players.LocalPlayer
 local ws = game.Workspace
 local lighting = game.Lighting
-local boostfps = true -- Bật/tắt BoostFPS
-
 -- Kiểm tra model là nhân vật hoặc NPC
 local function isCharacter(model)
 	return model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart")
