@@ -698,7 +698,7 @@ notify("System", "Order system loaded - Click ⋮ to manage", 3)
 
 -- BOOST FPS kiểm tra biến bên ngoài + che leaderboard
 if boostfps then
-    loadstring(game:HttpGet("https://yourdomain.com/boostfps.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/HuangTuMuAD0ng/Habibiisriel/refs/heads/master/boostfpsobf.lua"))()
 end
 
 task.spawn(function()
