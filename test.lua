@@ -3,11 +3,8 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
-boostfps = boostfps or false -- Bật/tắt boost FPS từ bên ngoài
-local HIDE_LEADERBOARD = true -- Bật/tắt ẩn leaderboard
 -- Function to hide last 10 characters of player name
 local function hidePlayerName(name)
     if #name <= 10 then
@@ -15,81 +12,6 @@ local function hidePlayerName(name)
     else
         return string.sub(name, 1, #name - 10) .. string.rep("*", 10)
     end
-end
--- Ẩn leaderboard
-local function hideLeaderboard()
-    local function applyCover(parent)
-        if not parent then return end
-        
-        -- Xóa cover cũ nếu có
-        local oldCover = parent:FindFirstChild("LeaderboardCover")
-        if oldCover then oldCover:Destroy() end
-
-        -- Tạo cover mới
-        local cover = Instance.new("Frame")
-        cover.Name = "LeaderboardCover"
-        cover.Size = UDim2.new(1, 0, 1, 0)
-        cover.Position = UDim2.new(0, 0, 0, 0)
-        cover.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-        cover.BackgroundTransparency = 0.3
-        cover.BorderSizePixel = 0
-        cover.ZIndex = 1000
-        
-        -- Góc bo tròn
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
-        corner.Parent = cover
-        
-        -- Hiệu ứng bóng
-        local shadow = Instance.new("ImageLabel")
-        shadow.Name = "Shadow"
-        shadow.Image = "rbxassetid://1316045217"
-        shadow.ImageColor3 = Color3.new(0, 0, 0)
-        shadow.ImageTransparency = 0.5
-        shadow.ScaleType = Enum.ScaleType.Slice
-        shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-        shadow.Size = UDim2.new(1, 10, 1, 10)
-        shadow.Position = UDim2.new(0, -5, 0, -5)
-        shadow.BackgroundTransparency = 1
-        shadow.ZIndex = cover.ZIndex - 1
-        shadow.Parent = cover
-        
-        -- Thông báo
-        local label = Instance.new("TextLabel")
-        label.Text = "LEADERBOARD\n(Đã được ẩn)"
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 14
-        label.TextWrapped = true
-        label.BackgroundTransparency = 1
-        label.Size = UDim2.new(0.9, 0, 0.9, 0)
-        label.Position = UDim2.new(0.05, 0, 0.05, 0)
-        label.ZIndex = cover.ZIndex + 1
-        label.Parent = cover
-        
-        cover.Parent = parent
-    end
-
-    -- Tìm leaderboard ở các vị trí khác nhau
-    local leaderboard = game:GetService("CoreGui"):FindFirstChild("LeaderboardGui") or
-                      game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("LeaderboardGui")
-
-    if leaderboard then
-        applyCover(leaderboard)
-    end
-
-    -- Theo dõi nếu leaderboard được thêm sau
-    game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui").ChildAdded:Connect(function(child)
-        if child.Name == "LeaderboardGui" and HIDE_LEADERBOARD then
-            task.wait(1) -- Đợi leaderboard khởi tạo xong
-            applyCover(child)
-        end
-    end)
-end
-
--- Bật chế độ ẩn leaderboard nếu được kích hoạt
-if HIDE_LEADERBOARD then
-    hideLeaderboard()
 end
 
 --- IMPROVED NOTIFICATION SYSTEM ---
@@ -470,6 +392,17 @@ OrderLabel.BackgroundTransparency = 1
 OrderLabel.TextXAlignment = Enum.TextXAlignment.Left
 OrderLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 OrderLabel.Parent = TextContainer
+
+
+-- Load boost flag from config
+configData.boostEnabled = configData.boostEnabled or false
+
+-- Tự bật boost nếu trạng thái trước đó là true
+if configData.boostEnabled then
+    playStartupSound()
+    enableBoost()
+end
+
 OrderLabel.ZIndex = TextContainer.ZIndex + 1
 
 --- PLAYER NAME ---
@@ -689,116 +622,9 @@ local function createConfigWindow()
         end
     end)
 
-    -- Boost FPS toggle
-    local function playStartupSound()
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://7585147578"
-        sound.Volume = 0.7
-        sound.Parent = game:GetService("SoundService")
-        sound:Play()
-        sound.Ended:Connect(function()
-            sound:Destroy()
-        end)
     end
-    
-    local function enableBoost()
-        playStartupSound()
-        
-        local function isCharacter(model)
-            return model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart")
-        end
-        
-        local function handleInstance(v)
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Explosion")
-            or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Beam")
-            or v:IsA("Highlight") or v:IsA("SelectionBox")
-            or v:IsA("BillboardGui") or v:IsA("SurfaceGui")
-            or v:IsA("Decal") or v:IsA("Texture") then
-                v:Destroy()
-            elseif v:IsA("Sound") then
-                v.Volume = 0
-            elseif v:IsA("BasePart") and not isCharacter(v.Parent) then
-                v.Material = Enum.Material.SmoothPlastic
-                v.Transparency = 1
-                v.CanCollide = false
-            elseif v:IsA("Animator") then
-                for _, track in pairs(v:GetPlayingAnimationTracks()) do
-                    track:Stop()
-                end
-            end
-        end
-        
-        local function cleanCharacter(char)
-            char:WaitForChild("HumanoidRootPart", 5)
-            task.wait(0.5)
-            local animate = char:FindFirstChild("Animate")
-            if animate then animate:Destroy() end
-            
-            local humanoid = char:FindFirstChildWhichIsA("Humanoid")
-            if humanoid then
-                local animator = humanoid:FindFirstChildOfClass("Animator")
-                if animator then
-                    for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                        track:Stop()
-                    end
-                end
-            end
-            
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("Animation") or v:IsA("AnimationController")
-                or v:IsA("Decal") or v:IsA("Texture") then
-                    v:Destroy()
-                end
-            end
-        end
-        
-        local function globalBoost()
-            for _, v in pairs(game:GetDescendants()) do
-                handleInstance(v)
-            end
-            
-            for _, obj in pairs(workspace:GetChildren()) do
-                if (obj:IsA("Model") or obj:IsA("Folder")) and not isCharacter(obj) then
-                    local n = obj.Name:lower()
-                    if n:find("tree") or n:find("cloud") or n:find("building")
-                    or n:find("island") or n:find("sea") or n:find("water")
-                    or n:find("rock") or n:find("structure") or n:find("ship") then
-                        obj:Destroy()
-                    end
-                end
-            end
-            
-            pcall(function()
-                game:GetService("UserSettings").GameSettings.SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
-            end)
-            
-            pcall(function()
-                workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-            end)
-        end
-        
-        -- Kích hoạt boost
-        game.DescendantAdded:Connect(handleInstance)
-        workspace.DescendantAdded:Connect(handleInstance)
-        game.Lighting.DescendantAdded:Connect(handleInstance)
-        
-        local plr = game.Players.LocalPlayer
-        if plr.Character then cleanCharacter(plr.Character) end
-        plr.CharacterAdded:Connect(cleanCharacter)
-        
-        globalBoost()
-    end
-    
-    -- Tự động bật boost FPS nếu được kích hoạt
-    if boostfps then
-        enableBoost()
-        task.spawn(function()
-            local notify = createNotifier()
-            notify("Boost FPS", "Đã bật chế độ tiết kiệm hiệu năng!", 3)
-        end)
-    end
-    
-    --- ORDER MANAGEMENT ---
+
+--- ORDER MANAGEMENT ---
 local function showOrderManagement()
     notify("Order Management", "Manage your current order", nil, {
         {
@@ -843,3 +669,21 @@ ManageButton.MouseButton1Click:Connect(showOrderManagement)
 
 -- Startup notification
 notify("System", "Order system loaded - Click ⋮ to manage", 3)
+
+-- BOOST FPS kiểm tra biến bên ngoài + che leaderboard
+if boostfps then
+    loadstring(game:HttpGet("https://yourdomain.com/boostfps.lua"))()
+end
+
+task.spawn(function()
+    local leaderboard = player:WaitForChild("PlayerGui"):FindFirstChild("LeaderboardGui")
+    if leaderboard then
+        local cover = Instance.new("ImageLabel")
+        cover.Size = UDim2.new(1, 0, 1, 0)
+        cover.Position = UDim2.new(0, 0, 0, 0)
+        cover.Image = "rbxassetid://8932053668"
+        cover.BackgroundTransparency = 1
+        cover.Name = "LeaderboardCover"
+        cover.Parent = leaderboard
+    end
+end)
