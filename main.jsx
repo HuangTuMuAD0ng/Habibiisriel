@@ -1,180 +1,156 @@
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local plr = game.Players.LocalPlayer
+local ws = game.Workspace
+local lighting = game.Lighting
+local boostfps = true -- Bật/tắt BoostFPS
 
--- Đường dẫn file tổng hợp config
-local configFilePath = "order_configs.json"
-
--- Hàm tải toàn bộ configs
-local function loadConfigs()
-    if isfile(configFilePath) then
-        local fileContent = readfile(configFilePath)
-        local configData = HttpService:JSONDecode(fileContent)
-        return configData
-    end
-    return {}
+-- Kiểm tra model là nhân vật hoặc NPC
+local function isCharacter(model)
+	return model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart")
 end
 
--- Hàm lưu toàn bộ configs
-local function saveConfigs(configData)
-    writefile(configFilePath, HttpService:JSONEncode(configData))
+-- Danh sách các đối tượng đã xử lý
+local handledInstances = {}
+
+-- Xử lý đối tượng khi vừa được thêm vào
+local function handleInstance(v)
+	if handledInstances[v] then return end
+	handledInstances[v] = true
+
+	if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Explosion")
+	or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Beam")
+	or v:IsA("Highlight") or v:IsA("SelectionBox")
+	or v:IsA("BillboardGui") or v:IsA("SurfaceGui")
+	or v:IsA("Decal") or v:IsA("Texture") then
+		v:Destroy()
+	elseif v:IsA("Sound") then
+		v.Volume = 0
+	elseif v:IsA("BasePart") and not isCharacter(v.Parent) then
+		v.Material = Enum.Material.SmoothPlastic
+		v.Transparency = 1
+		v.CanCollide = false
+	elseif v:IsA("Animator") then
+		for _, track in pairs(v:GetPlayingAnimationTracks()) do
+			track:Stop()
+		end
+	elseif v:IsA("Animation") or v:IsA("AnimationController") then
+		v:Destroy()
+	elseif v:IsA("Script") and v.Name == "Animate" then
+		v:Destroy()
+	end
 end
 
--- Hàm lấy config của người chơi
-local function getPlayerConfig(username)
-    local configs = loadConfigs()
-    return configs[username] or { order = "[Trống]" }
+-- Màn hình trắng toàn bộ
+local function createWhiteScreen()
+	local screenGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+	screenGui.IgnoreGuiInset = true
+
+	local whiteFrame = Instance.new("Frame")
+	whiteFrame.Size = UDim2.new(1, 0, 1, 0)
+	whiteFrame.Position = UDim2.new(0, 0, 0, 0)
+	whiteFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	whiteFrame.BackgroundTransparency = 0
+	whiteFrame.BorderSizePixel = 0
+	whiteFrame.Parent = screenGui
+
 end
 
--- Hàm cập nhật config của người chơi
-local function setPlayerConfig(username, newConfig)
-    local configs = loadConfigs()
-    configs[username] = newConfig
-    saveConfigs(configs)
+-- Làm sạch giao diện
+local function hideUI()
+	for _, gui in pairs(plr.PlayerGui:GetChildren()) do
+		if gui:IsA("ScreenGui") then
+			gui.Enabled = false
+		end
+	end
 end
 
--- Tạo GUI
-local MainScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local ServerTimeLabel = Instance.new("TextLabel")
-local OrderLabel = Instance.new("TextLabel")
-local PlayerNameLabel = Instance.new("TextLabel")
-local ClearButton = Instance.new("TextButton")
-local SettingsButton = Instance.new("TextButton")
-local UICornerMain = Instance.new("UICorner")
+-- Làm sạch ánh sáng
+local function cleanLighting()
+	for _, v in pairs(lighting:GetChildren()) do
+		if not v:IsA("Sky") then
+			v:Destroy()
+		end
+	end
+	lighting.FogEnd = 1e10
+	lighting.GlobalShadows = false
+	lighting.Brightness = 0
+end
 
--- Thêm GUI chính vào PlayerGui
-MainScreenGui.Parent = player:WaitForChild("PlayerGui")
-MainScreenGui.Enabled = true
+-- Tối giản camera
+local function cleanCamera()
+	local cam = workspace.CurrentCamera
+	if cam then
+		cam.FieldOfView = 70
+		cam:ClearAllChildren()
+	end
+end
 
--- Thiết lập MainFrame
-MainFrame.Size = UDim2.new(0, 400, 0, 80)
-MainFrame.Position = UDim2.new(0.5, -200, 0, 10)
-MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.BackgroundTransparency = 0.4
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = MainScreenGui
+-- Xóa mô hình không cần thiết
+local function cleanEnvironment()
+	for _, obj in pairs(ws:GetChildren()) do
+		if (obj:IsA("Model") or obj:IsA("Folder")) and not isCharacter(obj) then
+			local n = obj.Name:lower()
+			if n:find("tree") or n:find("cloud") or n:find("building")
+			or n:find("island") or n:find("sea") or n:find("water")
+			or n:find("rock") or n:find("structure") or n:find("ship") then
+				obj:Destroy()
+			end
+		end
+	end
+end
 
-UICornerMain.CornerRadius = UDim.new(0, 10)
-UICornerMain.Parent = MainFrame
+-- Tối ưu nhân vật
+local function cleanCharacter(char)
+	if not char then return end
+	local animate = char:FindFirstChild("Animate")
+	if animate then animate:Destroy() end
 
--- Hiển thị thời gian chạy script
-ServerTimeLabel.Text = "Thời gian chạy: 00:00"
-ServerTimeLabel.Size = UDim2.new(1, -10, 0.2, 0)
-ServerTimeLabel.Position = UDim2.new(0, 0, 0.1, 0)
-ServerTimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-ServerTimeLabel.Font = Enum.Font.Roboto
-ServerTimeLabel.TextScaled = true
-ServerTimeLabel.BackgroundTransparency = 1
-ServerTimeLabel.Parent = MainFrame
+	local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+	if humanoid then
+		local animator = humanoid:FindFirstChildOfClass("Animator")
+		if animator then
+			for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+				track:Stop()
+			end
+		end
+	end
 
-local injectStartTime = os.time()
-spawn(function()
-    while true do
-        local elapsedTime = os.time() - injectStartTime
-        local minutes = math.floor(elapsedTime / 60)
-        local seconds = elapsedTime % 60
-        ServerTimeLabel.Text = string.format("Thời gian chạy: %02d:%02d", minutes, seconds)
-        wait(1)
-    end
-end)
+	for _, v in pairs(char:GetDescendants()) do
+		if v:IsA("Animation") or v:IsA("AnimationController")
+		or v:IsA("Decal") or v:IsA("Texture") then
+			v:Destroy()
+		end
+	end
+end
 
--- Hiển thị đơn hàng
-local username = player.Name
-local configData = getPlayerConfig(username)
-OrderLabel.Text = "Đơn hàng: " .. (configData.order or "[Trống]")
-OrderLabel.Size = UDim2.new(1, -10, 0.2, 0)
-OrderLabel.Position = UDim2.new(0, 0, 0.35, 0)
-OrderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-OrderLabel.Font = Enum.Font.Roboto
-OrderLabel.TextScaled = true
-OrderLabel.BackgroundTransparency = 1
-OrderLabel.Parent = MainFrame
+-- Theo dõi object mới
+game.DescendantAdded:Connect(handleInstance)
+ws.DescendantAdded:Connect(handleInstance)
+lighting.DescendantAdded:Connect(handleInstance)
 
--- Hiển thị tên người chơi (ẩn 4 ký tự cuối)
-local visibleUsername = string.sub(username, 1, #username - 4) .. "****"
-PlayerNameLabel.Text = "Tên người chơi: " .. visibleUsername
-PlayerNameLabel.Size = UDim2.new(1, -10, 0.2, 0)
-PlayerNameLabel.Position = UDim2.new(0, 0, 0.6, 0)
-PlayerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlayerNameLabel.Font = Enum.Font.Roboto
-PlayerNameLabel.TextScaled = true
-PlayerNameLabel.BackgroundTransparency = 1
-PlayerNameLabel.Parent = MainFrame
+-- Hàm chính
+local function globalBoost()
+	-- Hạ chất lượng
+	pcall(function()
+		game:GetService("UserSettings").GameSettings.SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
+	end)
 
--- Nút xóa đơn hàng
-ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
-ClearButton.Position = UDim2.new(0.85, 0, 0.6, 0)
-ClearButton.Text = "Xóa"
-ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ClearButton.Font = Enum.Font.GothamBold
-ClearButton.TextScaled = true
-ClearButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ClearButton.Parent = MainFrame
+	-- Dọn dẹp
+	for _, v in pairs(game:GetDescendants()) do
+		handleInstance(v)
+	end
+	cleanEnvironment()
+	hideUI()
+	cleanLighting()
+	cleanCamera()
+	createWhiteScreen()
+end
 
-ClearButton.MouseButton1Click:Connect(function()
-    setPlayerConfig(username, { order = "[Trống]" })
-    OrderLabel.Text = "Đơn hàng: [Trống]"
-    print("Đã xóa thông tin đơn hàng của tài khoản: " .. username)
-end)
-
--- Nút mở cửa sổ chỉnh sửa
-SettingsButton.Size = UDim2.new(0.1, 0, 0.4, 0)
-SettingsButton.Position = UDim2.new(0, 10, 0.6, 0)
-SettingsButton.Text = "⚙️"
-SettingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SettingsButton.Font = Enum.Font.GothamBold
-SettingsButton.TextScaled = true
-SettingsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-SettingsButton.Parent = MainFrame
-
--- Tạo cửa sổ chỉnh sửa config
-local ConfigWindow = Instance.new("Frame")
-local OrderInputBox = Instance.new("TextBox")
-local DoneButton = Instance.new("TextButton")
-local UICornerConfig = Instance.new("UICorner")
-
-ConfigWindow.Size = UDim2.new(0, 350, 0, 150)
-ConfigWindow.Position = UDim2.new(0.5, -175, 0.5, -75)
-ConfigWindow.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ConfigWindow.BackgroundTransparency = 0.5
-ConfigWindow.BorderSizePixel = 0
-ConfigWindow.Visible = false
-ConfigWindow.Parent = MainScreenGui
-
-UICornerConfig.CornerRadius = UDim.new(0, 10)
-UICornerConfig.Parent = ConfigWindow
-
-OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
-OrderInputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-OrderInputBox.PlaceholderText = "Nhập chỉnh sửa đơn hàng..."
-OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-OrderInputBox.Font = Enum.Font.Roboto
-OrderInputBox.TextScaled = true
-OrderInputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-OrderInputBox.Parent = ConfigWindow
-
-DoneButton.Size = UDim2.new(0.3, 0, 0.3, 0)
-DoneButton.Position = UDim2.new(0.35, 0, 0.7, 0)
-DoneButton.Text = "Xong"
-DoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-DoneButton.Font = Enum.Font.GothamBold
-DoneButton.TextScaled = true
-DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
-DoneButton.Parent = ConfigWindow
-
--- Hiển thị cửa sổ chỉnh sửa khi nhấn nút cài đặt
-SettingsButton.MouseButton1Click:Connect(function()
-    ConfigWindow.Visible = true
-end)
-
--- Lưu chỉnh sửa và tắt cửa sổ
-DoneButton.MouseButton1Click:Connect(function()
-    local newOrder = OrderInputBox.Text
-    if newOrder ~= "" then
-        OrderLabel.Text = "Đơn hàng: " .. newOrder
-        setPlayerConfig(username, { order = newOrder })
-        print("Đã lưu chỉnh sửa đơn hàng cho tài khoản: " .. username)
-    end
-    ConfigWindow.Visible = false
-end)
+-- Khởi động nếu bật boostfps
+if boostfps then
+	globalBoost()
+	if plr.Character then cleanCharacter(plr.Character) end
+	plr.CharacterAdded:Connect(cleanCharacter)
+	print("✅ Boost FPS đã bật!")
+else
+	print("⚠️ Boost FPS đang tắt.")
+end
