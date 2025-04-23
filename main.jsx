@@ -68,9 +68,7 @@ local function boost()
     white.Size = UDim2.new(1, 0, 1, 0)
     white.BackgroundColor3 = Color3.new(1, 1, 1)
 
-    task.delay(10, function()
-        if boostGui then boostGui:Destroy() end
-    end)
+ 
 
     print("✅ Boost FPS đã được bật.")
 end
