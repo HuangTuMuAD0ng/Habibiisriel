@@ -54,6 +54,6 @@ local function cleanAllCharacters()
 end
 
 -- Lặp lại để xử lý NPC và người chơi mới
-while task.wait(3) do
+while task.wait(1) do
 	pcall(cleanAllCharacters)
 end
