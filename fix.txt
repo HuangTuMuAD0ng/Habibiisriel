@@ -1,181 +1,85 @@
-print("Script Made By Koha")
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
-
--- Ensure "Networking" exists in ReplicatedStorage
-local Networking = ReplicatedStorage:FindFirstChild("Networking")
-if not Networking then
-    warn("Networking object not found in ReplicatedStorage!")
-    -- You can create it or handle the error here if necessary
-    Networking = Instance.new("Folder")
-    Networking.Name = "Networking"
-    Networking.Parent = ReplicatedStorage
-    print("Temporary Networking object created.")
+wait(30)
+boostfps = true
+if typeof(boostfps) ~= "boolean" then
+    warn("⚠️ Bạn chưa khai báo biến boostfps = true hoặc false trước khi chạy script.")
+    return
 end
 
--- Function to create the config file path based on the username
-local function getConfigFilePath(username)
-    return username .. "_order_configs.json"
+local plr = game.Players.LocalPlayer
+local ws = game.Workspace
+local lighting = game.Lighting
+
+local boosted = false
+local boostGui = nil
+
+local function restore()
+    if boostGui then
+        boostGui:Destroy()
+        boostGui = nil
+    end
+    print("🔄 Đã tắt Boost FPS. Khôi phục mặc định.")
 end
 
--- Function to load all configs (with error handling)
-local function loadConfigs(username)
-    local filePath = getConfigFilePath(username)
-    if isfile(filePath) then
-        local success, configData = pcall(function()
-            return HttpService:JSONDecode(readfile(filePath))
-        end)
-        if success then
-            return configData
-        else
-            warn("JSON decoding error: ", configData)
+local function boost()
+    local handledInstances = {}
+
+    local function isCharacter(model)
+        return model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart")
+    end
+
+    local function handleInstance(v)
+        if handledInstances[v] then return end
+        handledInstances[v] = true
+
+        if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Explosion")
+        or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Beam")
+        or v:IsA("Highlight") or v:IsA("SelectionBox")
+        or v:IsA("BillboardGui") or v:IsA("SurfaceGui")
+        or v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+        elseif v:IsA("Sound") then
+            v.Volume = 0
+        elseif v:IsA("BasePart") and not isCharacter(v.Parent) then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Transparency = 1
+            v.CanCollide = false
         end
     end
-    return {}
+
+    for _, v in pairs(game:GetDescendants()) do
+        handleInstance(v)
+    end
+
+    ws.DescendantAdded:Connect(handleInstance)
+    game.DescendantAdded:Connect(handleInstance)
+    lighting.DescendantAdded:Connect(handleInstance)
+
+    pcall(function()
+        game:GetService("UserSettings").GameSettings.SavedQualityLevel = Enum.SavedQualitySetting.QualityLevel1
+    end)
+
+    boostGui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+    boostGui.IgnoreGuiInset = true
+    local white = Instance.new("Frame", boostGui)
+    white.Size = UDim2.new(1, 0, 1, 0)
+    white.BackgroundColor3 = Color3.new(1, 1, 1)
+
+    task.delay(0, function()
+        if boostGui then boostGui:Destroy() end
+    end)
+
+    print("✅ Boost FPS đã được bật.")
 end
 
--- Function to save all configs
-local function saveConfigs(username, configData)
-    local filePath = getConfigFilePath(username)
-    local success, errorMessage = pcall(function()
-        writefile(filePath, HttpService:JSONEncode(configData))
-    end)
-    if not success then
-        warn("Error saving config: ", errorMessage)
+-- Kích hoạt
+if boostfps then
+    if not boosted then
+        boosted = true
+        boost()
+    end
+else
+    if boosted then
+        boosted = false
+        restore()
     end
 end
-
--- Function to get the player's config
-local function getPlayerConfig(username)
-    local configs = loadConfigs(username)
-    return configs or { order = "[Empty]" }
-end
-
--- Function to update the player's config
-local function setPlayerConfig(username, newConfig)
-    saveConfigs(username, newConfig)
-end
-
--- Ensure PlayerGui is ready
-repeat wait() until player:FindFirstChild("PlayerGui")
-
--- Create main GUI
-local MainScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local OrderLabel = Instance.new("TextLabel")
-local PlayerNameLabel = Instance.new("TextLabel")
-local ClearButton = Instance.new("TextButton")
-local SettingsButton = Instance.new("TextButton")
-local UICornerMain = Instance.new("UICorner")
-
--- Add the GUI to PlayerGui
-MainScreenGui.Parent = player:WaitForChild("PlayerGui")
-MainScreenGui.Enabled = true
-
--- MainFrame properties (UI positioned at the top edge of the screen)
-MainFrame.Size = UDim2.new(0, 480, 0, 64) -- Size remains unchanged
-MainFrame.Position = UDim2.new(0.5, -240, 0, 0) -- Position shifted to top edge of the screen
-MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.BackgroundTransparency = 0.4
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = MainScreenGui
-
-UICornerMain.CornerRadius = UDim.new(0, 10)
-UICornerMain.Parent = MainFrame
-
--- Display order information
-local username = player.Name
-local configData = getPlayerConfig(username)
-
-OrderLabel.Text = "Order: " .. (configData.order or "[Empty]")
-OrderLabel.Size = UDim2.new(0.8, 0, 0.4, 0)
-OrderLabel.Position = UDim2.new(0.1, 0, 0.2, 0)
-OrderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-OrderLabel.Font = Enum.Font.GothamBold
-OrderLabel.TextScaled = false
-OrderLabel.TextSize = 28
-OrderLabel.BackgroundTransparency = 1
-OrderLabel.Parent = MainFrame
-
--- Display the player's name
-local visibleUsername = string.sub(username, 1, #username - 4) .. "****"
-PlayerNameLabel.Text = "Player Name: " .. visibleUsername
-PlayerNameLabel.Size = UDim2.new(0.8, 0, 0.4, 0)
-PlayerNameLabel.Position = UDim2.new(0.1, 0, 0.6, 0)
-PlayerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlayerNameLabel.Font = Enum.Font.Gotham
-PlayerNameLabel.TextScaled = false
-PlayerNameLabel.TextSize = 20
-PlayerNameLabel.BackgroundTransparency = 1
-PlayerNameLabel.Parent = MainFrame
-
--- Edit order button (left side)
-SettingsButton.Size = UDim2.new(0.15, 0, 0.4, 0)
-SettingsButton.Position = UDim2.new(0, 0, 0.3, 0)
-SettingsButton.Text = "⚙️"
-SettingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SettingsButton.Font = Enum.Font.GothamBold
-SettingsButton.TextScaled = true
-SettingsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-SettingsButton.Parent = MainFrame
-
-SettingsButton.MouseButton1Click:Connect(function()
-    local ConfigWindow = Instance.new("Frame")
-    local OrderInputBox = Instance.new("TextBox")
-    local DoneButton = Instance.new("TextButton")
-
-    ConfigWindow.Size = UDim2.new(0, 280, 0, 120)
-    ConfigWindow.Position = UDim2.new(0.5, -140, 0.5, -60)
-    ConfigWindow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ConfigWindow.BackgroundTransparency = 0.5
-    ConfigWindow.Parent = MainScreenGui
-
-    OrderInputBox.Size = UDim2.new(0.8, 0, 0.4, 0)
-    OrderInputBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-    OrderInputBox.PlaceholderText = "Made By Koha?"
-    OrderInputBox.Text = ""
-    OrderInputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    OrderInputBox.Font = Enum.Font.Gotham
-    OrderInputBox.TextScaled = true
-    OrderInputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    OrderInputBox.Parent = ConfigWindow
-
-    DoneButton.Size = UDim2.new(0.3, 0, 0.3, 0)
-    DoneButton.Position = UDim2.new(0.35, 0, 0.7, 0)
-    DoneButton.Text = "Done"
-    DoneButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    DoneButton.Font = Enum.Font.GothamBold
-    DoneButton.TextScaled = true
-    DoneButton.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
-    DoneButton.Parent = ConfigWindow
-
-    DoneButton.MouseButton1Click:Connect(function()
-        local newOrder = OrderInputBox.Text
-        if newOrder ~= "" then
-            OrderLabel.Text = "Order: " .. newOrder
-            setPlayerConfig(username, { order = newOrder })
-            ConfigWindow:Destroy()
-            print("Saved new order for user: " .. username)
-        else
-            warn("Cannot save empty order!")
-        end
-    end)
-end)
-
--- Clear order button (right side)
-ClearButton.Size = UDim2.new(0.15, 0, 0.4, 0)
-ClearButton.Position = UDim2.new(1, -72, 0.3, 0)
-ClearButton.Text = "🗑️"
-ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ClearButton.Font = Enum.Font.GothamBold
-ClearButton.TextScaled = true
-ClearButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ClearButton.Parent = MainFrame
-
-ClearButton.MouseButton1Click:Connect(function()
-    setPlayerConfig(username, { order = "[Empty]" })
-    OrderLabel.Text = "Order: [Empty]"
-    print("Cleared order for user: " .. username)
-end)
