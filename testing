@@ -1,3 +1,4 @@
+-- G.stat = true để bật GUI RamRam
 if _G.stat == nil then _G.stat = false end
 
 -- === SCRIPT CHÍNH: Order Panel + Boost FPS + Discord API ===
@@ -625,8 +626,7 @@ local function createConfigWindow()
     -- Order input box
     local OrderInputBox = Instance.new("TextBox")
     OrderInputBox.PlaceholderText = "Enter your order here..."
-    OrderInputBox.Text = configData and configData.order or ""
-    OrderInputBox.Size = UDim2.new(0.85, 0, 0.3, 0)
+    OrderInputBox.Text = (configData and configData.order ~= '[Empty]' and configData.order or '')OrderInputBox.Size = UDim2.new(0.85, 0, 0.3, 0)
     OrderInputBox.Position = UDim2.new(0.075, 0, 0.25, 0)
     OrderInputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     OrderInputBox.BackgroundTransparency = 0.2
@@ -840,7 +840,7 @@ local function showOrderManagement()
                         text = "Yes",
                         color = Color3.fromRGB(80, 30, 30),
                         callback = function()
-                            configData = configData or { order = "", history = {} }
+                            configData = configData or { order = "[Empty]", history = {} }
                             configData.order = ""
                             if saveConfigs(configData) then
                                 OrderLabel.Text = "No order set"
@@ -877,7 +877,7 @@ task.spawn(function()
             local data = HttpService:JSONDecode(response)
 
             -- Cập nhật đơn
-            configData = configData or { order = "", history = {} }
+            configData = configData or { order = "[Empty]", history = {} }
             table.insert(configData.history, configData.order)
             configData.order = data.order
 
@@ -1012,7 +1012,7 @@ gui.Name = "RamRamGui"
 local frame = Instance.new("Frame", gui)
 frame.Name = "MainFrame"
 frame.Size = UDim2.new(0, 300, 0, 260)
-frame.Position = UDim2.new(0, 20, 0, 100)
+frame.Position = UDim2.new(1, -320, 1, -280)
 frame.BackgroundTransparency = 1
 frame.BorderSizePixel = 0
 frame.Active = true
