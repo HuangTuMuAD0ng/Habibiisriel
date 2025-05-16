@@ -840,7 +840,7 @@ local function showOrderManagement()
                         text = "Yes",
                         color = Color3.fromRGB(80, 30, 30),
                         callback = function()
-                            configData = configData or { order = "[Empty]", history = {} }
+                            configData = configData or { order = "", history = {} }
                             configData.order = ""
                             if saveConfigs(configData) then
                                 OrderLabel.Text = "No order set"
