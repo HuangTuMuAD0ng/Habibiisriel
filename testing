@@ -673,7 +673,7 @@ local function createConfigWindow()
         local newOrder = OrderInputBox.Text
         if newOrder ~= "" then
             if not configData then
-                configData = { order = "[Empty]", history = {} }
+                configData = { order = "", history = {} }
             end
             
             table.insert(configData.history, configData.order)
