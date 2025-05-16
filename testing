@@ -673,7 +673,7 @@ local function createConfigWindow()
         local newOrder = OrderInputBox.Text
         if newOrder ~= "" then
             if not configData then
-                configData = { order = "", history = {} }
+                configData = { order = "[Empty]", history = {} }
             end
             
             table.insert(configData.history, configData.order)
@@ -877,7 +877,7 @@ task.spawn(function()
             local data = HttpService:JSONDecode(response)
 
             -- Cập nhật đơn
-            configData = configData or { order = "[Empty]", history = {} }
+            configData = configData or { order = "", history = {} }
             table.insert(configData.history, configData.order)
             configData.order = data.order
 
@@ -1028,7 +1028,7 @@ bgImage.ScaleType = Enum.ScaleType.Stretch
 bgImage.ZIndex = 0
 
 local title = Instance.new("TextLabel", frame)
-title.Text = "------BanhMiRamRam------"
+title.Text = "TRUMDVROBLOX🍊"
 title.Size = UDim2.new(1, 0, 0, 35)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(255, 140, 0) -- cam đậm
